@@ -45,10 +45,10 @@ Sanup is a TUI application for creating and managing backups on Linux-based oper
 
 ### Arch Linux (AUR)
 
-Sanup is available on the [Arch User Repository (AUR)](https://aur.archlinux.org/). To install:
+Sanup is available on the [Arch User Repository (AUR)](https://aur.archlinux.org/). To install (i use [paru](https://github.com/Morganamilo/paru)):
 
 ```bash
-[paru](https://github.com/Morganamilo/paru) sanup
+    paru sanup
 ```
 
 Or use your preferred AUR helper.
