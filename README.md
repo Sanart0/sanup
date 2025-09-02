@@ -55,28 +55,11 @@ Or use your preferred AUR helper.
 
 ## Usage
 
-1. Launch Sanup using `sanup` (if installed via AUR) or `cargo run --release`.
-2. Use vim keymaps to navigate the TUI:
-   - Select files/directories in the browse mode.
-   - Configure backup options (e.g., destination, compression).
-3. Press `q` or `Ctrl+C` to exit.
-
 ## Project Structure
 
 ## Dependencies
 
-- `crossterm`: Terminal handling for input and raw mode.
-- `tui`: TUI widgets and layouts (using crossterm backend).
-
 ## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/YourFeature`).
-3. Commit your changes (`git commit -m "Add YourFeature"`).
-4. Push to the branch (`git push origin feature/YourFeature`).
-5. Open a Pull Request.
 
 ## License
 
