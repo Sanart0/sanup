@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use log::error;
+use std::fmt::Display;
 
 pub type SanupResult<T> = Result<T, SanupError>;
 
