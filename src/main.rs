@@ -1,1 +1,34 @@
-fn main() {}
+use crossterm::{
+    event::{DisableMouseCapture, EnableMouseCapture},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
+use sanup::{error::SanupResult, ui::run_app};
+use std::io::stdout;
+use tui::{Terminal, backend::CrosstermBackend};
+
+fn main() -> SanupResult<()> {
+    enable_raw_mode()?;
+
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    let res = run_app(&mut terminal);
+
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = res {
+        println!("{:?}", err)
+    }
+
+    Ok(())
+}

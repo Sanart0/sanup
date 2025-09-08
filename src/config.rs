@@ -1,6 +1,6 @@
-use std::{fs, path::Path};
-use serde::{Deserialize, Serialize};
 use crate::error::SanupResult;
+use serde::{Deserialize, Serialize};
+use std::{fs, path::Path};
 
 pub trait Config: Serialize + for<'a> Deserialize<'a> + Default {
     fn init<P: AsRef<Path>>(path: P) -> SanupResult<Self> {
