@@ -1,9 +1,9 @@
-pub enum SanupState {
-    Main,
-}
+pub mod state;
+
+use crate::sanup::state::SanupState;
 
 pub struct Sanup {
-    state: SanupState,
+    pub state: SanupState,
 }
 
 impl Sanup {
@@ -13,5 +13,11 @@ impl Sanup {
         }
     }
 
-    pub fn on_key(&mut self, c: char) {}
+    pub fn on_key(&mut self, c: char) {
+        match c {
+            'h' => self.state.prev(),
+            'l' => self.state.next(),
+            _ => {}
+        }
+    }
 }
