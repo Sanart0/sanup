@@ -1,3 +1,6 @@
+pub mod inputform;
+pub mod stringfield;
+
 use crate::{
     error::SanupResult,
     sanup::{Sanup, state::SanupState},
@@ -43,3 +46,5 @@ fn ui(f: &mut Frame, app: &Sanup) {
 
     f.render_widget(body_block, body_area);
 }
+
+fn create_backup(f: &mut Frame, app: &Sanup) {}
