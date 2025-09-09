@@ -3,9 +3,9 @@ use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use sanup::{error::SanupResult, ui::run_app};
+use ratatui::{prelude::CrosstermBackend, Terminal};
+use sanup::{error::SanupResult, sanup::Sanup, ui::run_app};
 use std::io::stdout;
-use tui::{Terminal, backend::CrosstermBackend};
 
 fn main() -> SanupResult<()> {
     enable_raw_mode()?;
@@ -16,7 +16,8 @@ fn main() -> SanupResult<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let res = run_app(&mut terminal);
+    let app = Sanup::new();
+    let res = run_app(&mut terminal, app);
 
     disable_raw_mode()?;
     execute!(
