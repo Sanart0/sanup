@@ -4,7 +4,11 @@ use crate::{
 };
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::{
-    layout::{Constraint, Layout}, prelude::Backend, style::{Style, Stylize}, symbols::block, widgets::{Block, Paragraph, Tabs}, Frame, Terminal
+    Frame, Terminal,
+    layout::{Constraint, Layout},
+    prelude::Backend,
+    style::{Style, Stylize},
+    widgets::{Block, Tabs},
 };
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: Sanup) -> SanupResult<()> {
@@ -38,5 +42,4 @@ fn ui(f: &mut Frame, app: &Sanup) {
     let body_block = Block::bordered().style(Style::default().white());
 
     f.render_widget(body_block, body_area);
-
 }
