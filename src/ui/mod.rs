@@ -1,17 +1,18 @@
+pub mod inputfield;
+pub mod inputfieldtype;
 pub mod inputform;
-pub mod stringfield;
 
 use crate::{
     error::SanupResult,
     sanup::{Sanup, state::SanupState},
 };
-use crossterm::event::{self, Event, KeyCode};
 use ratatui::{
     Frame, Terminal,
+    crossterm::event::{self, Event, KeyCode},
     layout::{Constraint, Layout},
     prelude::Backend,
     style::{Style, Stylize},
-    widgets::{Block, Tabs},
+    widgets::{Block, Clear, Tabs},
 };
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: Sanup) -> SanupResult<()> {
@@ -19,11 +20,11 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: Sanup) -> SanupR
         terminal.draw(|f| ui(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') => return Ok(()),
-                KeyCode::Char(c) => app.on_key(c),
-                _ => {}
+            if let KeyCode::Char('q') = key.code {
+                return Ok(());
             }
+
+            app.on_key(key);
         }
     }
 }
@@ -42,9 +43,7 @@ fn ui(f: &mut Frame, app: &Sanup) {
 
     f.render_widget(tabs, tabs_area);
 
-    let body_block = Block::bordered().style(Style::default().white());
-
-    f.render_widget(body_block, body_area);
+    f.render_widget(Clear, body_area);
 }
 
 fn create_backup(f: &mut Frame, app: &Sanup) {}

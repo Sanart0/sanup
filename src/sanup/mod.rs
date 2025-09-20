@@ -2,6 +2,7 @@ pub mod message;
 pub mod state;
 
 use crate::sanup::{message::Message, state::SanupState};
+use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use std::sync::mpsc::{Receiver, Sender, channel};
 
 pub struct Sanup {
@@ -19,11 +20,13 @@ impl Sanup {
         }
     }
 
-    pub fn on_key(&mut self, c: char) {
-        match c {
-            'h' => self.state.prev(),
-            'l' => self.state.next(),
-            _ => {}
+    pub fn on_key(&mut self, key: KeyEvent) {
+        if let KeyCode::Char(c) = key.code {
+            match c {
+                'h' => self.state.prev(),
+                'l' => self.state.next(),
+                _ => {}
+            }
         }
     }
 }
