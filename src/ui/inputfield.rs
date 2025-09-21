@@ -25,8 +25,12 @@ impl<T: InputType + Default> InputField<T> {
         Self { label, value }
     }
 
-    pub fn value(&self) -> &T {
-        &self.value
+    pub fn value(&self) -> T::Value {
+        self.value.value()
+    }
+
+    pub fn set_focus(&mut self, focus: bool) {
+        self.value.set_focus(focus);
     }
 
     pub fn on_key(&mut self, event: KeyEvent) -> bool {

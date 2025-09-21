@@ -4,7 +4,7 @@ pub mod inputform;
 
 use crate::{
     error::SanupResult,
-    sanup::{Sanup, state::SanupState},
+    sanup::{Sanup, state::SanupState, tabs::SanupTabs},
 };
 use ratatui::{
     Frame, Terminal,
@@ -17,7 +17,7 @@ use ratatui::{
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: Sanup) -> SanupResult<()> {
     loop {
-        terminal.draw(|f| ui(f, &app))?;
+        terminal.draw(|f| ui(f, &mut app))?;
 
         if let Event::Key(key) = event::read()? {
             if let KeyCode::Char('q') = key.code {
@@ -29,21 +29,22 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: Sanup) -> SanupR
     }
 }
 
-fn ui(f: &mut Frame, app: &Sanup) {
+fn ui(f: &mut Frame, app: &mut Sanup) {
     let area = f.area();
     let vertical_layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]);
     let [tabs_area, body_area] = vertical_layout.areas(area);
 
-    let tabs = Tabs::new(SanupState::into_vec_str())
+    let tabs = Tabs::new(SanupTabs::into_vec_str())
         .block(Block::bordered().title("Sanup"))
         .style(Style::default().white())
         .highlight_style(Style::default().light_green())
-        .select(app.state.into_idx())
+        .select(app.tabs.into_idx())
         .divider(" ");
 
     f.render_widget(tabs, tabs_area);
 
-    f.render_widget(Clear, body_area);
+    f.render_widget(&mut app.input_form, body_area);
+    f.set_cursor_position(app.input_form.cursor_position());
 }
 
 fn create_backup(f: &mut Frame, app: &Sanup) {}

@@ -1,11 +1,25 @@
 pub trait InputType: Clone + ToString {
+    type Value;
+
     fn parse_input(&mut self, c: char) -> bool;
     fn remove_last(&mut self) -> bool;
+    fn value(&self) -> Self::Value;
+    fn set_focus(&mut self, focus: bool);
 }
 
 #[derive(Clone, Default)]
 pub struct StringField {
+    focus: bool,
     value: String,
+}
+
+impl Into<StringField> for String {
+    fn into(self) -> StringField {
+        StringField {
+            focus: false,
+            value: self,
+        }
+    }
 }
 
 impl ToString for StringField {
@@ -15,6 +29,8 @@ impl ToString for StringField {
 }
 
 impl InputType for StringField {
+    type Value = String;
+
     fn parse_input(&mut self, c: char) -> bool {
         if c.is_ascii() && !c.is_control() {
             self.value.push(c);
@@ -27,11 +43,35 @@ impl InputType for StringField {
     fn remove_last(&mut self) -> bool {
         self.value.pop().is_some()
     }
+
+    fn value(&self) -> Self::Value {
+        self.value.clone()
+    }
+
+    fn set_focus(&mut self, focus: bool) {
+        self.focus = focus;
+    }
 }
 
 #[derive(Clone, Default)]
 pub struct IntegerField {
+    focus: bool,
     value: i128,
+}
+
+impl IntegerField {
+    pub fn value(&self) -> i128 {
+        self.value
+    }
+}
+
+impl Into<IntegerField> for i128 {
+    fn into(self) -> IntegerField {
+        IntegerField {
+            focus: false,
+            value: self,
+        }
+    }
 }
 
 impl ToString for IntegerField {
@@ -41,6 +81,8 @@ impl ToString for IntegerField {
 }
 
 impl InputType for IntegerField {
+    type Value = i128;
+
     fn parse_input(&mut self, c: char) -> bool {
         if c.is_digit(10) {
             let new_value = self
@@ -62,26 +104,32 @@ impl InputType for IntegerField {
         self.value /= 10;
         true
     }
+
+    fn value(&self) -> Self::Value {
+        self.value
+    }
+
+    fn set_focus(&mut self, focus: bool) {
+        self.focus = focus;
+    }
 }
 
 #[derive(Clone, Default)]
 pub struct FloatField {
+    focus: bool,
     value: f64,
     input: String,
     decimal_entered: bool,
 }
 
-impl FloatField {
-    pub fn new() -> Self {
-        Self {
-            value: 0.0,
-            input: String::new(),
-            decimal_entered: false,
+impl Into<FloatField> for f64 {
+    fn into(self) -> FloatField {
+        FloatField {
+            focus: false,
+            value: self,
+            input: self.to_string(),
+            decimal_entered: true,
         }
-    }
-
-    pub fn value(&self) -> f64 {
-        self.value
     }
 }
 
@@ -92,6 +140,8 @@ impl ToString for FloatField {
 }
 
 impl InputType for FloatField {
+    type Value = f64;
+
     fn parse_input(&mut self, c: char) -> bool {
         if c.is_digit(10) {
             self.input.push(c);
@@ -124,5 +174,13 @@ impl InputType for FloatField {
         } else {
             false
         }
+    }
+
+    fn value(&self) -> Self::Value {
+        self.value
+    }
+
+    fn set_focus(&mut self, focus: bool) {
+        self.focus = focus;
     }
 }
