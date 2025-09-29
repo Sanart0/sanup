@@ -3,8 +3,9 @@ use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
+use log::info;
 use ratatui::{Terminal, prelude::CrosstermBackend};
-use sanup::{error::SanupResult, sanup::Sanup, ui::run_app};
+use sanup::{error::SanupResult, logger::SanupLogger, sanup::Sanup, ui::run_app};
 use std::io::stdout;
 
 fn main() -> SanupResult<()> {
@@ -15,6 +16,9 @@ fn main() -> SanupResult<()> {
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+
+    let logger = SanupLogger::default();
+    logger.init(".")?;
 
     let app = Sanup::default();
     let res = run_app(&mut terminal, app);

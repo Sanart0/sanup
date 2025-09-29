@@ -1,7 +1,14 @@
 use crate::error::SanupResult;
-use fern::colors::{Color, ColoredLevelConfig};
+use chrono::{Local, Utc};
+use fern::{
+    Dispatch,
+    colors::{Color, ColoredLevelConfig},
+};
 use log::{LevelFilter, Log};
-use std::sync::{Arc, Mutex};
+use std::{
+    path::Path,
+    sync::{Arc, Mutex},
+};
 
 pub struct SanupLogger {
     logger: Mutex<Box<dyn Log>>,
@@ -31,7 +38,7 @@ impl SanupLogger {
         }
     }
 
-    pub fn change(
+    fn change(
         self: Arc<Self>,
         (level, new_logger): (LevelFilter, Box<dyn Log>),
     ) -> SanupResult<()> {
@@ -49,6 +56,30 @@ impl SanupLogger {
             .debug(Color::Green)
             .trace(Color::Magenta)
     }
+
+    pub fn init<P: AsRef<Path>>(self: Arc<Self>, path: P) -> SanupResult<()> {
+        let mut file_path = path.as_ref().to_path_buf();
+        file_path.push(format!(
+            "log_{}.log",
+            Utc::now().date_naive().format("%Y-%m-%d")
+        ));
+
+        self.change(
+            Dispatch::new()
+                .format(|out, msg, record| {
+                    out.finish(format_args!(
+                        "[{}] [{}] {}",
+                        Local::now().format("%Y-%m-%d %H:%M:%S"),
+                        SanupLogger::full_colors().color(record.level()),
+                        msg
+                    ));
+                })
+                .chain(fern::log_file(file_path)?)
+                .into_log(),
+        )?;
+
+        Ok(())
+    }
 }
 
 impl Log for SanupLogger {
@@ -60,11 +91,15 @@ impl Log for SanupLogger {
     }
 
     fn log(&self, record: &log::Record) {
-        if let Ok(logger) = self.logger.lock() { logger.log(record) }
+        if let Ok(logger) = self.logger.lock() {
+            logger.log(record)
+        }
     }
 
     fn flush(&self) {
-        if let Ok(logger) = self.logger.lock() { logger.flush() }
+        if let Ok(logger) = self.logger.lock() {
+            logger.flush()
+        }
     }
 }
 

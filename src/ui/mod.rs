@@ -47,9 +47,7 @@ fn ui(f: &mut Frame, app: &mut Sanup) {
         f.render_widget(&mut app.input_form, body_area);
         f.set_cursor_position(app.input_form.cursor_position());
     } else if app.input_form.is_cancelled() {
-        f.render_widget("CANCELLED", body_area);
     } else {
         f.render_widget(Clear, body_area);
-        f.render_widget("SOME", body_area);
     }
 }
