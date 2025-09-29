@@ -4,7 +4,7 @@ pub mod inputform;
 
 use crate::{
     error::SanupResult,
-    sanup::{Sanup, state::SanupState, tabs::SanupTabs},
+    sanup::{Sanup, tabs::SanupTabs},
 };
 use ratatui::{
     Frame, Terminal,
@@ -35,7 +35,7 @@ fn ui(f: &mut Frame, app: &mut Sanup) {
     let [tabs_area, body_area] = vertical_layout.areas(area);
 
     let tabs = Tabs::new(SanupTabs::into_vec_str())
-        .block(Block::bordered().title("Sanup"))
+        .block(Block::bordered().title(app.title))
         .style(Style::default().white())
         .highlight_style(Style::default().light_green())
         .select(app.tabs.into_idx())
@@ -43,8 +43,13 @@ fn ui(f: &mut Frame, app: &mut Sanup) {
 
     f.render_widget(tabs, tabs_area);
 
-    f.render_widget(&mut app.input_form, body_area);
-    f.set_cursor_position(app.input_form.cursor_position());
+    if app.input_form.is_active() {
+        f.render_widget(&mut app.input_form, body_area);
+        f.set_cursor_position(app.input_form.cursor_position());
+    } else if app.input_form.is_cancelled() {
+        f.render_widget("CANCELLED", body_area);
+    } else {
+        f.render_widget(Clear, body_area);
+        f.render_widget("SOME", body_area);
+    }
 }
-
-fn create_backup(f: &mut Frame, app: &Sanup) {}

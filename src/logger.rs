@@ -7,16 +7,14 @@ pub struct SanupLogger {
     logger: Mutex<Box<dyn Log>>,
 }
 
+#[allow(clippy::should_implement_trait)]
 impl SanupLogger {
     pub fn default() -> Arc<Self> {
         let logger = Arc::new(SanupLogger {
             logger: Mutex::new(Box::new(EmptyLogger)),
         });
 
-        match log::set_boxed_logger(Box::new(logger.clone())) {
-            Ok(_) => {}
-            Err(_) => {}
-        };
+        if log::set_boxed_logger(Box::new(logger.clone())).is_ok() {};
 
         log::set_max_level(LevelFilter::Off);
 
@@ -62,17 +60,11 @@ impl Log for SanupLogger {
     }
 
     fn log(&self, record: &log::Record) {
-        match self.logger.lock() {
-            Ok(logger) => logger.log(record),
-            Err(_) => {}
-        }
+        if let Ok(logger) = self.logger.lock() { logger.log(record) }
     }
 
     fn flush(&self) {
-        match self.logger.lock() {
-            Ok(logger) => logger.flush(),
-            Err(_) => {}
-        }
+        if let Ok(logger) = self.logger.lock() { logger.flush() }
     }
 }
 

@@ -16,7 +16,7 @@ fn main() -> SanupResult<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let app = Sanup::new();
+    let app = Sanup::default();
     let res = run_app(&mut terminal, app);
 
     disable_raw_mode()?;

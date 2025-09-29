@@ -18,6 +18,7 @@ use std::{
 };
 use uuid::Uuid;
 
+#[allow(dead_code)]
 pub struct Backup {
     id: Uuid,
     sanup: Sender<Message>,
@@ -29,6 +30,7 @@ pub struct Backup {
     destination: BackupDestination,
 }
 
+#[allow(clippy::new_ret_no_self)]
 impl Backup {
     pub fn new(
         id: Uuid,
@@ -39,7 +41,7 @@ impl Backup {
         source: BackupSource,
         destination: BackupDestination,
     ) -> SanupResult<JoinHandle<()>> {
-        let backup = Self {
+        let _backup = Self {
             id,
             sanup,
             title,

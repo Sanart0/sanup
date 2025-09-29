@@ -9,10 +9,22 @@ pub enum SanupFocus {
 impl SanupFocus {
     pub fn into_idx(&self) -> usize {
         match self {
-            SanupFocus::Tabs => 0,
-            SanupFocus::Body => 0,
-            SanupFocus::InputForm => 0,
+            Self::Tabs => 0,
+            Self::Body => 0,
+            Self::InputForm => 0,
         }
+    }
+
+    pub fn to_tabs(&mut self) {
+        *self = Self::Tabs;
+    }
+
+    pub fn to_body(&mut self) {
+        *self = Self::Body;
+    }
+
+    pub fn to_inputform(&mut self) {
+        *self = Self::InputForm;
     }
 }
 

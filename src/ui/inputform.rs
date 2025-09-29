@@ -3,7 +3,8 @@ use std::rc::Rc;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{KeyCode, KeyEvent},
-    layout::{Constraint, Layout, Margin, Rect}, widgets::{Block, Borders, Widget},
+    layout::{Constraint, Layout, Margin, Rect},
+    widgets::{Block, Borders, Widget},
 };
 
 use crate::ui::{
@@ -13,7 +14,8 @@ use crate::ui::{
 
 #[derive(Clone)]
 pub struct InputForm {
-    state: FormState,
+    state: InputFormState,
+    title: &'static str,
     focus_idx: usize,
     fields: Vec<Field>,
     field_areas: Rc<[Rect]>,
@@ -27,7 +29,7 @@ pub enum Field {
     Float(InputField<FloatField>),
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Value {
     String(String),
     Integer(i128),
@@ -35,35 +37,46 @@ pub enum Value {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum FormState {
+enum InputFormState {
+    Hidden,
     Active,
     Submitted,
     Cancelled,
 }
 
 impl InputForm {
-    pub fn new(fields: Vec<Field>) -> Self {
-        let mut form = Self {
-            state: FormState::Active,
+    pub fn empty() -> Self {
+        Self {
+            state: InputFormState::Hidden,
+            title: "",
+            focus_idx: 0,
+            fields: Vec::new(),
+            field_areas: Rc::new([]),
+            inner_area: Rect::ZERO,
+        }
+    }
+
+    pub fn new(label: &'static str, fields: Vec<Field>) -> Self {
+        Self {
+            state: InputFormState::Active,
+            title: label,
             focus_idx: 0,
             fields,
             field_areas: Rc::new([]),
             inner_area: Rect::ZERO,
-        };
-        form.update_focus();
-        form
+        }
     }
 
     pub fn is_active(&self) -> bool {
-        self.state == FormState::Active
+        self.state == InputFormState::Active
     }
 
     pub fn is_submitted(&self) -> bool {
-        self.state == FormState::Submitted
+        self.state == InputFormState::Submitted
     }
 
     pub fn is_cancelled(&self) -> bool {
-        self.state == FormState::Cancelled
+        self.state == InputFormState::Cancelled
     }
 
     pub fn values(&self) -> Vec<Value> {
@@ -77,7 +90,10 @@ impl InputForm {
             .collect()
     }
 
-    fn update_focus(&mut self) {
+    fn next_focus(&mut self) {
+        self.focus_idx += 1;
+        self.focus_idx %= self.fields.len();
+
         for (i, field) in self.fields.iter_mut().enumerate() {
             match field {
                 Field::String(f) => f.set_focus(i == self.focus_idx),
@@ -87,36 +103,24 @@ impl InputForm {
         }
     }
 
-    pub fn on_key(&mut self, event: KeyEvent) -> bool {
-        if !self.is_active() {
-            return false;
-        }
-
-        match event.code {
+    pub fn on_key(&mut self, key: KeyEvent) {
+        match key.code {
             KeyCode::Tab => {
-                self.focus_idx += 1;
-                self.focus_idx %= self.fields.len();
-
-                self.update_focus();
-                true
+                self.next_focus();
             }
             KeyCode::Enter => {
-                self.state = FormState::Submitted;
-                true
+                self.state = InputFormState::Submitted;
             }
             KeyCode::Esc => {
-                self.state = FormState::Cancelled;
-                true
+                self.state = InputFormState::Cancelled;
             }
             _ => {
                 if let Some(field) = self.fields.get_mut(self.focus_idx) {
                     match field {
-                        Field::String(f) => f.on_key(event),
-                        Field::Integer(f) => f.on_key(event),
-                        Field::Float(f) => f.on_key(event),
+                        Field::String(f) => f.on_key(key),
+                        Field::Integer(f) => f.on_key(key),
+                        Field::Float(f) => f.on_key(key),
                     }
-                } else {
-                    false
                 }
             }
         }
@@ -131,7 +135,7 @@ impl InputForm {
             .cloned()
             .unwrap_or(self.inner_area);
 
-        let cursor_position = if let Some(field) = focused_field {
+        if let Some(field) = focused_field {
             match field {
                 Field::String(f) => focused_area.offset(f.cursor_offset()),
                 Field::Integer(f) => focused_area.offset(f.cursor_offset()),
@@ -139,9 +143,7 @@ impl InputForm {
             }
         } else {
             focused_area
-        };
-
-        return cursor_position;
+        }
     }
 }
 
@@ -150,9 +152,7 @@ impl Widget for &mut InputForm {
         let height = self.fields.len() as u16 + 3;
         let popup_area = centered_rect(area, 50, height);
 
-        let block = Block::default()
-            .title("Input Form")
-            .borders(Borders::ALL);
+        let block = Block::default().title(self.title).borders(Borders::ALL);
         block.render(popup_area, buf);
 
         self.inner_area = popup_area.inner(Margin::new(1, 1));
