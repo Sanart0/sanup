@@ -4,12 +4,13 @@ pub mod state;
 pub mod tabs;
 
 use crate::{
-    sanup::{focus::SanupFocus, message::Message, state::SanupState, tabs::SanupTabs},
+    app::{focus::SanupFocus, message::Message, state::SanupState, tabs::SanupTabs},
     ui::{
         inputfield::InputField,
         inputform::{Field, InputForm},
     },
 };
+use log::info;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use std::sync::mpsc::{Receiver, Sender, channel};
 
@@ -62,9 +63,11 @@ impl Sanup {
 
                 if self.input_form.is_submitted() {
                     //TODO Submitted Input Form
+                    info!("SUBMITTED");
                     self.focus.to_body();
                 } else if self.input_form.is_cancelled() {
                     //TODO Cancelled Input Form
+                    info!("CANCELLED");
                     self.focus.to_body();
                 }
             }

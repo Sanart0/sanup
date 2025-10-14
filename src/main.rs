@@ -3,9 +3,8 @@ use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use log::info;
 use ratatui::{Terminal, prelude::CrosstermBackend};
-use sanup::{error::SanupResult, logger::SanupLogger, sanup::Sanup, ui::run_app};
+use sanup::{app::Sanup, error::SanupResult, logger::SanupLogger, ui::run_app};
 use std::io::stdout;
 
 fn main() -> SanupResult<()> {

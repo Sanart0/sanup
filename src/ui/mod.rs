@@ -3,9 +3,10 @@ pub mod inputfieldtype;
 pub mod inputform;
 
 use crate::{
+    app::{Sanup, tabs::SanupTabs},
     error::SanupResult,
-    sanup::{Sanup, tabs::SanupTabs},
 };
+use log::info;
 use ratatui::{
     Frame, Terminal,
     crossterm::event::{self, Event, KeyCode},
@@ -43,11 +44,16 @@ fn ui(f: &mut Frame, app: &mut Sanup) {
 
     f.render_widget(tabs, tabs_area);
 
+    info!("APP STATE: {}", app.focus);
+    info!("APP TAB: {}", app.tabs);
     if app.input_form.is_active() {
         f.render_widget(&mut app.input_form, body_area);
         f.set_cursor_position(app.input_form.cursor_position());
+        info!("ACTIVE");
     } else if app.input_form.is_cancelled() {
+        info!("CANCELLED");
     } else {
         f.render_widget(Clear, body_area);
+        info!("CLEAR");
     }
 }

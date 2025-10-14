@@ -5,12 +5,12 @@ pub mod source;
 pub mod status;
 
 use crate::{
+    app::message::Message,
     backup::{
         destination::BackupDestination, filter::BackupFilter, kind::BackupKind,
         source::BackupSource, status::BackupStatus,
     },
     error::SanupResult,
-    sanup::message::Message,
 };
 use std::{
     sync::mpsc::Sender,

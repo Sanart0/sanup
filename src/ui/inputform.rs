@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use log::info;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{KeyCode, KeyEvent},
@@ -36,7 +37,7 @@ pub enum Value {
     Float(f64),
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum InputFormState {
     Hidden,
     Active,
@@ -104,6 +105,8 @@ impl InputForm {
     }
 
     pub fn on_key(&mut self, key: KeyEvent) {
+        info!("PRESSED: {:?}", key);
+        info!("STATE: {:?}", self.state);
         match key.code {
             KeyCode::Tab => {
                 self.next_focus();
