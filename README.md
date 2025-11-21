@@ -69,17 +69,15 @@ src/
 ├── error.rs     Error handling logic (SanupError, SanupResult)
 ```
 
-## Diagrams
-
-# ER
+### ER
 
 ![ER](./image/ER.png)
 
-# Component
+### Component
 
 ![Component](./image/Component.png)
 
-# Sequence
+### Sequence
 
 Create new backup
 ![Create new backup](./image/create_new_backup.png)
