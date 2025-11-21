@@ -57,6 +57,48 @@ Or use your preferred AUR helper.
 
 ## Project Structure
 
+### Source code modules
+
+```text
+src/
+├── app/         Main app (Sanup)
+├── ui/          UI logic and custom components
+├── backup/      Backup logic (BackupTask, BackupWorker)
+├── db/          Database logic (DatabaseManager)
+├── config.rs    Config Trait provide logic of save/load Toml
+├── error.rs     Error handling logic (SanupError, SanupResult)
+```
+
+## Diagrams
+
+# ER
+
+![ER](./image/ER.png)
+
+# Component
+
+![Component](./image/Component.png)
+
+# Sequence
+
+Create new backup
+![Create new backup](./image/create_new_backup.png)
+
+View backup history
+![View backup history](./image/view_backup_history.png)
+
+Pause or Cancel backup
+![Pause or Cancel backup](./image/pause_cancel_backup.png)
+
+Delete backup
+![Delete backup](./image/delete_backup.png)
+
+Restore
+![Restore](./image/restore.png)
+
+Change settings
+![Change settings](./image/change_settings.png)
+
 ## Dependencies
 
 ## Contributing

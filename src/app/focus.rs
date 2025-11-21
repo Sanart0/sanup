@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+#[derive(PartialEq, Eq)]
 pub enum SanupFocus {
     Tabs,
     Body,
@@ -13,6 +14,18 @@ impl SanupFocus {
             Self::Body => 0,
             Self::InputForm => 0,
         }
+    }
+
+    pub fn is_tabs(&self) -> bool {
+        *self == Self::Tabs
+    }
+
+    pub fn is_body(&self) -> bool {
+        *self == Self::Body
+    }
+
+    pub fn is_inputform(&self) -> bool {
+        *self == Self::InputForm
     }
 
     pub fn to_tabs(&mut self) {
