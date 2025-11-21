@@ -38,22 +38,21 @@ fn ui(f: &mut Frame, app: &mut Sanup) {
     let tabs = Tabs::new(SanupTabs::into_vec_str())
         .block(Block::bordered().title(app.title))
         .style(Style::default().white())
-        .highlight_style(Style::default().light_green())
+        .highlight_style(Style::default().green())
         .select(app.tabs.into_idx())
         .divider(" ");
 
     f.render_widget(tabs, tabs_area);
 
-    info!("APP STATE: {}", app.focus);
-    info!("APP TAB: {}", app.tabs);
+    info!("APP FOCUS: {}", app.focus);
     if app.input_form.is_active() {
         f.render_widget(&mut app.input_form, body_area);
         f.set_cursor_position(app.input_form.cursor_position());
         info!("ACTIVE");
     } else if app.input_form.is_cancelled() {
         info!("CANCELLED");
-    } else {
-        f.render_widget(Clear, body_area);
-        info!("CLEAR");
+    } else if app.focus.is_body() {
+        app.body_text = format!("{:?}", std::time::Instant::now());
+        f.render_widget(app.body_text.clone(), body_area);
     }
 }

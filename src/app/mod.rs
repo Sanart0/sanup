@@ -15,13 +15,13 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use std::sync::mpsc::{Receiver, Sender, channel};
 
 pub struct Sanup {
-    pub state: SanupState,
     pub title: &'static str,
+    pub state: SanupState,
     pub focus: SanupFocus,
     pub tabs: SanupTabs,
-    pub channel: (Sender<Message>, Receiver<Message>),
     pub backups: Vec<Receiver<Message>>,
     pub input_form: InputForm,
+    pub body_text: String,
 }
 
 impl Sanup {
@@ -30,12 +30,19 @@ impl Sanup {
             self.focus = SanupFocus::Tabs;
         }
 
+        info!("APP EVENT: {:?}", key);
+
         match self.focus {
             SanupFocus::Tabs => {
                 if let KeyCode::Char(c) = key.code {
                     match c {
                         'l' => self.tabs.next(),
                         'h' => self.tabs.prev(),
+                        'j' => {
+                            if self.focus.is_tabs() {
+                                self.focus.to_body();
+                            }
+                        }
                         'c' => {
                             if self.tabs.is_backups() {
                                 self.input_form = InputForm::new(
@@ -54,7 +61,7 @@ impl Sanup {
                 }
             }
             SanupFocus::Body => {
-                if let KeyCode::Esc = key.code {
+                if let KeyCode::Char('k') = key.code {
                     self.focus.to_tabs();
                 }
             }
@@ -78,13 +85,13 @@ impl Sanup {
 impl Default for Sanup {
     fn default() -> Self {
         Sanup {
-            state: SanupState::None,
             title: "Sanup",
+            state: SanupState::None,
             focus: SanupFocus::Tabs,
             tabs: SanupTabs::Main,
-            channel: channel(),
             backups: Vec::new(),
             input_form: InputForm::empty(),
+            body_text: String::new(),
         }
     }
 }
