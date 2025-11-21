@@ -79,22 +79,28 @@ src/
 
 ### Sequence
 
-Create new backup
+#### Create new backup
+
 ![Create new backup](./image/create_new_backup.png)
 
-View backup history
+#### View backup history
+
 ![View backup history](./image/view_backup_history.png)
 
-Pause or Cancel backup
+#### Pause or Cancel backup
+
 ![Pause or Cancel backup](./image/pause_cancel_backup.png)
 
-Delete backup
+#### Delete backup
+
 ![Delete backup](./image/delete_backup.png)
 
-Restore
+#### Restore
+
 ![Restore](./image/restore.png)
 
-Change settings
+#### Change settings
+
 ![Change settings](./image/change_settings.png)
 
 ## Dependencies
