@@ -4,7 +4,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, prelude::CrosstermBackend};
-use sanup::{app::Sanup, error::SanupResult, logger::SanupLogger, ui::run_app};
+use sanup::{app::sanup::Sanup, error::SanupResult, logger::SanupLogger, ui::run_app};
 use std::io::stdout;
 
 fn main() -> SanupResult<()> {
