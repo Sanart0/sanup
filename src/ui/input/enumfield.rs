@@ -1,145 +1,181 @@
-use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crate::ui::{
+    centered_rect,
+    input::{
+        enumvariants::{DEFAULT_ENUM, EnumVariants},
+        inputfield::InputFieldKind,
+        inputfieldtype::InputType,
+    },
+};
+use ratatui::{
+    buffer::Buffer,
+    crossterm::event::{KeyCode, KeyEvent},
+    layout::{Constraint, Layout, Margin, Rect},
+    widgets::{Block, Borders, Clear, Widget},
+};
 
-use crate::ui::input::inputfieldtype::InputType;
-
-pub trait EnumVariants: ToString + Sized + Clone + Eq {
-    fn variants() -> Vec<Self>;
-    fn display_name(&self) -> String;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EnumFieldState {
+    Hidden,
+    Active,
 }
 
-#[derive(Clone, Default)]
-pub struct EnumField<E: EnumVariants> {
+#[derive(Clone)]
+pub struct EnumField {
+    state: EnumFieldState,
     focus: bool,
-    pub value: E,
-    variants: Vec<E>,
-    pub input: String,
-    pub selected_index: usize,
+    value: Box<dyn EnumVariants>,
+    variants: Vec<String>,
+    selected_idx: usize,
 }
 
-impl<E: EnumVariants> EnumField<E> {
-    pub fn matching_variants(&self) -> Vec<&E> {
-        if self.input.is_empty() {
-            self.variants.iter().collect()
-        } else {
-            self.variants
-                .iter()
-                .filter(|v| {
-                    v.to_string()
-                        .to_lowercase()
-                        .starts_with(&self.input.to_lowercase())
-                })
-                .collect()
-        }
-    }
-
-    pub fn select_current(&mut self) {
-        let selected = self
-            .matching_variants()
-            .get(self.selected_index)
-            .cloned()
-            .cloned()
-            .unwrap_or(self.value.clone());
-
-        self.value = selected.clone();
-        self.input = selected.to_string();
-    }
-
-    pub fn parse_input(&mut self, c: char) {
-        if !c.is_control() && c.is_ascii() {
-            self.input.push(c);
-            self.selected_index = 0;
-            let matching = self.matching_variants();
-            if let Some(&first_match) = matching.first() {
-                self.value = first_match.clone();
-            }
-        }
-    }
-
-    pub fn remove_last(&mut self) {
-        self.input.pop();
-        self.selected_index = 0;
-        let matching = self.matching_variants();
-        if let Some(&first) = matching.first() {
-            self.value = first.clone();
-        }
-    }
-}
-
-impl<E: EnumVariants> From<E> for EnumField<E> {
-    fn from(value: E) -> Self {
-        let variants = E::variants();
+impl EnumField {
+    pub fn new(value: Box<dyn EnumVariants>) -> Self {
+        let variants = value.variants();
         let selected_index = variants
             .iter()
-            .position(|v| std::mem::discriminant(v) == std::mem::discriminant(&value))
+            .position(|v| v.eq(&value.to_string()))
             .unwrap_or(0);
 
         EnumField {
+            state: EnumFieldState::Hidden,
             focus: false,
             value: value.clone(),
-            input: value.display_name(),
-            selected_index,
             variants,
+            selected_idx: selected_index,
         }
+    }
+
+    pub fn state(&self) -> EnumFieldState {
+        self.state
+    }
+
+    pub fn set_state(&mut self, state: EnumFieldState) {
+        self.state = state;
+    }
+
+    pub fn is_active(&self) -> bool {
+        self.state == EnumFieldState::Active
+    }
+
+    pub fn value(&self) -> &dyn EnumVariants {
+        &*self.value
+    }
+
+    pub fn to_string(&self) -> String {
+        self.value.to_string()
     }
 }
 
-impl<E: EnumVariants> ToString for EnumField<E> {
-    fn to_string(&self) -> String {
-        if self.focus && !self.input.is_empty() {
-            self.input.clone()
-        } else {
-            self.value.display_name()
-        }
-    }
-}
+impl InputType for EnumField {
+    type Value = Box<dyn EnumVariants>;
 
-impl<E: EnumVariants> InputType for EnumField<E> {
-    type Value = E;
+    fn kind() -> InputFieldKind {
+        InputFieldKind::Enum
+    }
 
     fn value(&self) -> Self::Value {
-        self.value.clone()
+        self.value.clone_box()
     }
 
     fn set_focus(&mut self, focus: bool) {
         self.focus = focus;
         if focus {
-            self.input = self.value.to_string();
-            self.selected_index = self
+            self.selected_idx = self
                 .variants
                 .iter()
-                .position(|v| v == &self.value)
+                .position(|v| v.eq(&self.value.to_string()))
                 .unwrap_or(0);
-        } else {
-            self.input.clear();
         }
     }
 
     fn on_key(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                let matching = self.matching_variants();
-                if !matching.is_empty() {
-                    self.selected_index = self.selected_index.saturating_sub(1);
-                    self.select_current();
+        if self.is_active() {
+            match key.code {
+                KeyCode::Esc => {
+                    self.value = self.value.default();
+                    self.set_state(EnumFieldState::Hidden);
                 }
-            }
-            KeyCode::Char('j') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                let matching = self.matching_variants();
-                if !matching.is_empty() {
-                    self.selected_index = (self.selected_index + 1) % matching.len();
-                    self.select_current();
+                KeyCode::Enter => {
+                    self.value = {
+                        if let Some(value) = self.variants.get(self.selected_idx) {
+                            self.value.from_string(value.clone())
+                        } else {
+                            self.value.default()
+                        }
+                    };
+                    self.set_state(EnumFieldState::Hidden);
                 }
+                KeyCode::Char('k') => {
+                    if self.selected_idx == 0 {
+                        self.selected_idx += self.variants.len();
+                    }
+                    self.selected_idx -= 1;
+                }
+                KeyCode::Char('j') => {
+                    self.selected_idx += 1;
+                    self.selected_idx %= self.variants.len();
+                }
+                _ => {}
             }
-            KeyCode::Char(c) => self.parse_input(c),
-            KeyCode::Backspace => self.remove_last(),
-            KeyCode::Enter | KeyCode::Tab => {
-                self.select_current();
-                self.input = self.value.to_string();
-            }
-            KeyCode::Esc => {
-                self.input = self.value.to_string();
-            }
-            _ => {}
+        } else if let KeyCode::Char('a') = key.code {
+            self.set_state(EnumFieldState::Active);
         }
+    }
+}
+
+impl Widget for EnumField {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        if self.is_active() {
+            let height = self.variants.len() as u16 + 2;
+            let popup_area = Rect {
+                x: area.x,
+                y: area.y - height,
+                width: self.value.longest().len() as u16 + 4,
+                height,
+            };
+
+            Clear.render(popup_area, buf);
+
+            let block = Block::default().title("Variants").borders(Borders::ALL);
+            block.render(popup_area, buf);
+
+            let inner_area = popup_area.inner(Margin::new(1, 1));
+            let constraints: Vec<Constraint> = (0..self.variants.len())
+                .map(|_| Constraint::Length(1))
+                .collect();
+            let layout = Layout::vertical(constraints);
+            let field_areas = layout.split(inner_area);
+
+            for (i, variant) in self.variants.iter().enumerate() {
+                let area = field_areas[i];
+                let variant = {
+                    if i == self.selected_idx {
+                        format!("*{}", variant)
+                    } else {
+                        format!(" {}", variant)
+                    }
+                };
+                variant.render(area, buf);
+            }
+        } else {
+            self.value.to_string().render(area, buf);
+        }
+    }
+}
+
+impl ToString for EnumField {
+    fn to_string(&self) -> String {
+        self.value.to_string()
+    }
+}
+
+impl Default for EnumField {
+    fn default() -> Self {
+        let default_value = DEFAULT_ENUM
+            .get()
+            .expect("Default enum variant not set. Call set_default_enum_variant() first.")
+            .clone_box();
+
+        Self::new(default_value)
     }
 }

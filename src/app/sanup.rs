@@ -1,9 +1,8 @@
 use crate::{
-    app::{focus::SanupFocus, settings::Settings, tabs::SanupTabs},
+    app::{focus::SanupFocus, settings::Settings, tabs::SanupTabs, theme::Theme},
     backup::task::BackupTask,
-    ui::input::{Field, inputfield::InputField, inputform::InputForm},
+    ui::input::{enumfield::EnumField, field::Field, inputfield::InputField, inputform::InputForm},
 };
-use log::info;
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     widgets::ListState,
@@ -21,7 +20,7 @@ pub struct Sanup {
 
 impl Sanup {
     pub fn on_key(&mut self, key: KeyEvent) {
-        info!("APP EVENT: {:?}", key);
+        // info!("APP EVENT: {:?}", key);
 
         match self.focus {
             SanupFocus::Tabs => {
@@ -43,7 +42,12 @@ impl Sanup {
                                         Field::Integer(InputField::new("INTEGER")),
                                         Field::Float(InputField::new("FLOAT")),
                                         Field::String(InputField::new("STRING")),
-                                    ],
+                                        Field::Enum(InputField::new_with_value(
+                                            "ENUM",
+                                            EnumField::new(Box::new(Theme::Dark)),
+                                        )),
+                                    ]
+                                    .into(),
                                 );
                                 self.focus.to_inputform();
                             }
@@ -79,7 +83,7 @@ impl Default for Sanup {
             focus: SanupFocus::Tabs,
             tabs: SanupTabs::Main,
             backups: Vec::new(),
-            input_form: InputForm::empty(),
+            input_form: InputForm::default(),
             settings: Settings::default(),
             settings_list_state: ListState::default().with_selected(None),
         }

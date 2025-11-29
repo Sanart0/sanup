@@ -1,11 +1,15 @@
-use ratatui::crossterm::event::{KeyCode, KeyEvent};
-
-use crate::ui::input::inputfieldtype::InputType;
+use crate::ui::input::{inputfield::InputFieldKind, inputfieldtype::InputType};
+use ratatui::{
+    buffer::Buffer,
+    crossterm::event::{KeyCode, KeyEvent},
+    layout::Rect,
+    widgets::Widget,
+};
 
 #[derive(Clone, Default)]
 pub struct IntegerField {
     focus: bool,
-    value: i128,
+    value: i64,
 }
 
 impl IntegerField {
@@ -14,7 +18,7 @@ impl IntegerField {
             self.value = self
                 .value
                 .saturating_mul(10)
-                .saturating_add(c.to_digit(10).unwrap() as i128);
+                .saturating_add(c.to_digit(10).unwrap() as i64);
         } else if c == '-' {
             self.value = self.value.saturating_mul(-1);
         }
@@ -33,8 +37,8 @@ impl IntegerField {
     }
 }
 
-impl From<i128> for IntegerField {
-    fn from(value: i128) -> Self {
+impl From<i64> for IntegerField {
+    fn from(value: i64) -> Self {
         IntegerField {
             focus: false,
             value,
@@ -50,7 +54,11 @@ impl ToString for IntegerField {
 }
 
 impl InputType for IntegerField {
-    type Value = i128;
+    type Value = i64;
+
+    fn kind() -> InputFieldKind {
+        InputFieldKind::Integer
+    }
 
     fn value(&self) -> Self::Value {
         self.value
@@ -68,5 +76,13 @@ impl InputType for IntegerField {
             KeyCode::Backspace => self.remove_last(),
             _ => {}
         }
+    }
+}
+
+impl Widget for IntegerField {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let value = self.value.to_string();
+
+        value.render(area, buf);
     }
 }

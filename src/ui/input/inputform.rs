@@ -1,4 +1,11 @@
-use crate::ui::input::{Field, Value};
+use crate::ui::{
+    centered_rect,
+    input::{
+        enumfield::EnumFieldState,
+        field::{Field, Fields},
+        value::{Value, Values},
+    },
+};
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{KeyCode, KeyEvent},
@@ -6,15 +13,6 @@ use ratatui::{
     widgets::{Block, Borders, Widget},
 };
 use std::rc::Rc;
-
-pub struct InputForm {
-    state: InputFormState,
-    title: &'static str,
-    focus_idx: usize,
-    fields: Vec<Field>,
-    field_areas: Rc<[Rect]>,
-    inner_area: Rect,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum InputFormState {
@@ -24,19 +22,17 @@ enum InputFormState {
     Cancelled,
 }
 
-impl InputForm {
-    pub fn empty() -> Self {
-        Self {
-            state: InputFormState::Hidden,
-            title: "",
-            focus_idx: 0,
-            fields: Vec::new(),
-            field_areas: Rc::new([]),
-            inner_area: Rect::ZERO,
-        }
-    }
+pub struct InputForm {
+    state: InputFormState,
+    title: &'static str,
+    focus_idx: usize,
+    fields: Fields,
+    field_areas: Rc<[Rect]>,
+    inner_area: Rect,
+}
 
-    pub fn new(label: &'static str, fields: Vec<Field>) -> Self {
+impl InputForm {
+    pub fn new(label: &'static str, fields: Fields) -> Self {
         Self {
             state: InputFormState::Active,
             title: label,
@@ -59,14 +55,15 @@ impl InputForm {
         self.state == InputFormState::Cancelled
     }
 
-    pub fn values(&self) -> Vec<Value> {
+    pub fn values(&self) -> Values {
         self.fields
             .iter()
             .map(|field| match field {
-                Field::String(f) => Value::String(f.value()),
-                Field::Integer(f) => Value::Integer(f.value()),
-                Field::Float(f) => Value::Float(f.value()),
-                Field::Bool(f) => Value::Bool(f.value()),
+                Field::Bool(f) => Value::Bool(f.title(), f.value()),
+                Field::Integer(f) => Value::Integer(f.title(), f.value()),
+                Field::Float(f) => Value::Float(f.title(), f.value()),
+                Field::String(f) => Value::String(f.title(), f.value()),
+                Field::Enum(f) => Value::Enum(f.title(), f.value()),
             })
             .collect()
     }
@@ -77,32 +74,51 @@ impl InputForm {
 
         for (i, field) in self.fields.iter_mut().enumerate() {
             match field {
-                Field::String(f) => f.set_focus(i == self.focus_idx),
+                Field::Bool(f) => f.set_focus(i == self.focus_idx),
                 Field::Integer(f) => f.set_focus(i == self.focus_idx),
                 Field::Float(f) => f.set_focus(i == self.focus_idx),
-                Field::Bool(f) => f.set_focus(i == self.focus_idx),
+                Field::String(f) => f.set_focus(i == self.focus_idx),
+                Field::Enum(f) => f.set_focus(i == self.focus_idx),
             }
         }
     }
 
+    fn get_current_enum_field_state(&self) -> EnumFieldState {
+        if let Some(Field::Enum(input_field_enum)) = self.fields.get(self.focus_idx) {
+            input_field_enum.field().state()
+        } else {
+            EnumFieldState::Hidden
+        }
+    }
+
     pub fn on_key(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Tab => {
-                self.next_focus();
-            }
-            KeyCode::Enter => {
-                self.state = InputFormState::Submitted;
-            }
-            KeyCode::Esc => {
-                self.state = InputFormState::Cancelled;
-            }
-            _ => {
+        match self.get_current_enum_field_state() {
+            EnumFieldState::Hidden => match key.code {
+                KeyCode::Esc => {
+                    self.state = InputFormState::Cancelled;
+                }
+                KeyCode::Enter => {
+                    self.state = InputFormState::Submitted;
+                }
+                KeyCode::Tab => {
+                    self.next_focus();
+                }
+                _ => {
+                    if let Some(field) = self.fields.get_mut(self.focus_idx) {
+                        match field {
+                            Field::Bool(f) => f.on_key(key),
+                            Field::Integer(f) => f.on_key(key),
+                            Field::Float(f) => f.on_key(key),
+                            Field::String(f) => f.on_key(key),
+                            Field::Enum(f) => f.on_key(key),
+                        }
+                    }
+                }
+            },
+            EnumFieldState::Active => {
                 if let Some(field) = self.fields.get_mut(self.focus_idx) {
-                    match field {
-                        Field::String(f) => f.on_key(key),
-                        Field::Integer(f) => f.on_key(key),
-                        Field::Float(f) => f.on_key(key),
-                        Field::Bool(f) => f.on_key(key),
+                    if let Field::Enum(f) = field {
+                        f.on_key(key);
                     }
                 }
             }
@@ -120,10 +136,11 @@ impl InputForm {
 
         if let Some(field) = focused_field {
             match field {
-                Field::String(f) => focused_area.offset(f.cursor_offset()),
+                Field::Bool(f) => focused_area.offset(f.cursor_offset()),
                 Field::Integer(f) => focused_area.offset(f.cursor_offset()),
                 Field::Float(f) => focused_area.offset(f.cursor_offset()),
-                Field::Bool(f) => focused_area.offset(f.cursor_offset()),
+                Field::String(f) => focused_area.offset(f.cursor_offset()),
+                Field::Enum(f) => focused_area.offset(f.cursor_offset()),
             }
         } else {
             focused_area
@@ -149,21 +166,25 @@ impl Widget for &mut InputForm {
         for (i, field) in self.fields.iter().enumerate() {
             let area = self.field_areas[i];
             match field {
-                Field::String(f) => f.render(area, buf),
+                Field::Bool(f) => f.render(area, buf),
                 Field::Integer(f) => f.render(area, buf),
                 Field::Float(f) => f.render(area, buf),
-                Field::Bool(f) => f.render(area, buf),
+                Field::String(f) => f.render(area, buf),
+                Field::Enum(f) => f.render(area, buf),
             }
         }
     }
 }
 
-fn centered_rect(parent: Rect, percent_x: u16, height: u16) -> Rect {
-    let width = parent.width * percent_x / 100;
-    Rect {
-        x: parent.x + (parent.width.saturating_sub(width)) / 2,
-        y: parent.y + (parent.height.saturating_sub(height)) / 2,
-        width,
-        height,
+impl Default for InputForm {
+    fn default() -> Self {
+        Self {
+            state: InputFormState::Hidden,
+            title: "",
+            focus_idx: 0,
+            fields: Fields::default(),
+            field_areas: Rc::new([]),
+            inner_area: Rect::ZERO,
+        }
     }
 }

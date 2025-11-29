@@ -1,6 +1,11 @@
-use ratatui::crossterm::event::{KeyCode, KeyEvent};
+use ratatui::{
+    buffer::Buffer,
+    crossterm::event::{KeyCode, KeyEvent},
+    layout::Rect,
+    widgets::Widget,
+};
 
-use crate::ui::input::inputfieldtype::InputType;
+use crate::ui::input::{inputfield::InputFieldKind, inputfieldtype::InputType};
 
 #[derive(Clone, Default)]
 pub struct BoolField {
@@ -33,6 +38,10 @@ impl ToString for BoolField {
 impl InputType for BoolField {
     type Value = bool;
 
+    fn kind() -> InputFieldKind {
+        InputFieldKind::Bool
+    }
+
     fn value(&self) -> Self::Value {
         self.value
     }
@@ -46,5 +55,13 @@ impl InputType for BoolField {
             KeyCode::Char('k') | KeyCode::Char('j') => self.toggle(),
             _ => {}
         }
+    }
+}
+
+impl Widget for BoolField {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let value = self.value.to_string();
+
+        value.render(area, buf);
     }
 }

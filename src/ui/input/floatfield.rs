@@ -1,6 +1,11 @@
-use ratatui::crossterm::event::{KeyCode, KeyEvent};
+use ratatui::{
+    buffer::Buffer,
+    crossterm::event::{KeyCode, KeyEvent},
+    layout::Rect,
+    widgets::Widget,
+};
 
-use crate::ui::input::inputfieldtype::InputType;
+use crate::ui::input::{inputfield::InputFieldKind, inputfieldtype::InputType};
 
 #[derive(Clone, Default)]
 pub struct FloatField {
@@ -68,6 +73,10 @@ impl ToString for FloatField {
 impl InputType for FloatField {
     type Value = f64;
 
+    fn kind() -> InputFieldKind {
+        InputFieldKind::Float
+    }
+
     fn value(&self) -> Self::Value {
         self.value
     }
@@ -84,5 +93,11 @@ impl InputType for FloatField {
             KeyCode::Backspace => self.remove_last(),
             _ => {}
         }
+    }
+}
+
+impl Widget for FloatField {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        self.input.render(area, buf);
     }
 }

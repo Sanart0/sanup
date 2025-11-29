@@ -1,6 +1,11 @@
-use ratatui::crossterm::event::{KeyCode, KeyEvent};
+use ratatui::{
+    buffer::Buffer,
+    crossterm::event::{KeyCode, KeyEvent},
+    layout::Rect,
+    widgets::Widget,
+};
 
-use crate::ui::input::inputfieldtype::InputType;
+use crate::ui::input::{inputfield::InputFieldKind, inputfieldtype::InputType};
 
 #[derive(Clone, Default)]
 pub struct StringField {
@@ -39,6 +44,10 @@ impl ToString for StringField {
 impl InputType for StringField {
     type Value = String;
 
+    fn kind() -> InputFieldKind {
+        InputFieldKind::String
+    }
+
     fn value(&self) -> Self::Value {
         self.value.clone()
     }
@@ -53,5 +62,11 @@ impl InputType for StringField {
             KeyCode::Backspace => self.remove_last(),
             _ => {}
         }
+    }
+}
+
+impl Widget for StringField {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        self.value.render(area, buf);
     }
 }

@@ -11,7 +11,7 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     prelude::Backend,
     style::{Style, Stylize},
-    widgets::{Block, Clear, Tabs},
+    widgets::{Block, Clear, Tabs, Widget},
 };
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: Sanup) -> SanupResult<()> {
@@ -42,6 +42,10 @@ fn ui(f: &mut Frame, app: &mut Sanup) {
     if app.input_form.is_active() {
         f.render_widget(&mut app.input_form, body_area);
         f.set_cursor_position(app.input_form.cursor_position());
+    } else if app.input_form.is_submitted() {
+        if let Ok(values) = toml::to_string(&app.input_form.values()) {
+            f.render_widget(values, body_area);
+        }
     } else if app.focus.is_body() {
         f.render_widget(Clear, body_area);
     }
@@ -72,4 +76,14 @@ fn settings_tab(f: &mut Frame, app: &mut Sanup, body_area: Rect) {
     //     .repeat_highlight_symbol(true);
     //
     // f.render_stateful_widget(var_list, area, state);
+}
+
+pub fn centered_rect(parent: Rect, percent_x: u16, height: u16) -> Rect {
+    let width = parent.width * percent_x / 100;
+    Rect {
+        x: parent.x + (parent.width.saturating_sub(width)) / 2,
+        y: parent.y + (parent.height.saturating_sub(height)) / 2,
+        width,
+        height,
+    }
 }
