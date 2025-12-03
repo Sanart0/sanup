@@ -1,11 +1,12 @@
+use std::path::PathBuf;
+
+use crate::ui::input::{inputfield::InputFieldKind, inputfieldtype::InputType};
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{KeyCode, KeyEvent},
     layout::Rect,
     widgets::Widget,
 };
-
-use crate::ui::input::{inputfield::InputFieldKind, inputfieldtype::InputType};
 
 #[derive(Clone, Default)]
 pub struct StringField {
@@ -30,6 +31,39 @@ impl From<String> for StringField {
         StringField {
             focus: false,
             value,
+        }
+    }
+}
+
+impl From<PathBuf> for StringField {
+    fn from(value: PathBuf) -> Self {
+        if let Some(str) = value.to_str() {
+            StringField {
+                focus: false,
+                value: str.to_string(),
+            }
+        } else {
+            StringField {
+                focus: false,
+                value: String::from(""),
+            }
+        }
+    }
+}
+
+impl From<Option<PathBuf>> for StringField {
+    fn from(value: Option<PathBuf>) -> Self {
+        if let Some(value) = value {
+            if let Some(str) = value.to_str() {
+                return StringField {
+                    focus: false,
+                    value: str.to_string(),
+                };
+            }
+        }
+        StringField {
+            focus: false,
+            value: String::from(""),
         }
     }
 }

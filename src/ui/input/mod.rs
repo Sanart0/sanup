@@ -6,6 +6,7 @@ pub mod floatfield;
 pub mod inputfield;
 pub mod inputfieldtype;
 pub mod inputform;
+pub mod inputlist;
 pub mod integerfield;
 pub mod stringfield;
 pub mod value;

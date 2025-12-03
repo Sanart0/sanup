@@ -1,10 +1,7 @@
-use crate::ui::{
-    centered_rect,
-    input::{
-        enumvariants::{DEFAULT_ENUM, EnumVariants},
-        inputfield::InputFieldKind,
-        inputfieldtype::InputType,
-    },
+use crate::ui::input::{
+    enumvariants::{EmptyEnum, EnumVariants},
+    inputfield::InputFieldKind,
+    inputfieldtype::InputType,
 };
 use ratatui::{
     buffer::Buffer,
@@ -29,22 +26,6 @@ pub struct EnumField {
 }
 
 impl EnumField {
-    pub fn new(value: Box<dyn EnumVariants>) -> Self {
-        let variants = value.variants();
-        let selected_index = variants
-            .iter()
-            .position(|v| v.eq(&value.to_string()))
-            .unwrap_or(0);
-
-        EnumField {
-            state: EnumFieldState::Hidden,
-            focus: false,
-            value: value.clone(),
-            variants,
-            selected_idx: selected_index,
-        }
-    }
-
     pub fn state(&self) -> EnumFieldState {
         self.state
     }
@@ -163,6 +144,29 @@ impl Widget for EnumField {
     }
 }
 
+impl<T> From<T> for EnumField
+where
+    T: EnumVariants + 'static,
+{
+    fn from(value: T) -> Self {
+        let value: Box<dyn EnumVariants> = Box::new(value);
+
+        let variants = value.variants();
+        let selected_idx = variants
+            .iter()
+            .position(|v| v.eq(&value.to_string()))
+            .unwrap_or(0);
+
+        EnumField {
+            state: EnumFieldState::Hidden,
+            focus: false,
+            value,
+            variants,
+            selected_idx,
+        }
+    }
+}
+
 impl ToString for EnumField {
     fn to_string(&self) -> String {
         self.value.to_string()
@@ -171,11 +175,6 @@ impl ToString for EnumField {
 
 impl Default for EnumField {
     fn default() -> Self {
-        let default_value = DEFAULT_ENUM
-            .get()
-            .expect("Default enum variant not set. Call set_default_enum_variant() first.")
-            .clone_box();
-
-        Self::new(default_value)
+        Self::from(EmptyEnum::Empty)
     }
 }

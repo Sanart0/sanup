@@ -2,6 +2,7 @@ pub mod compression_kind;
 pub mod compression_level;
 pub mod focus;
 pub mod hash_algorithm;
+pub mod log_level;
 pub mod sanup;
 pub mod settings;
 pub mod tabs;

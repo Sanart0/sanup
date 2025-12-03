@@ -1,17 +1,17 @@
 pub mod input;
 
 use crate::{
-    app::{sanup::Sanup, tabs::SanupTabs},
+    app::{sanup::Sanup, settings::Settings, tabs::SanupTabs},
     error::SanupResult,
+    ui::input::inputlist::InputList,
 };
-use log::info;
 use ratatui::{
     Frame, Terminal,
     crossterm::event::{self, Event, KeyCode},
     layout::{Constraint, Layout, Rect},
     prelude::Backend,
-    style::{Style, Stylize},
-    widgets::{Block, Clear, Tabs, Widget},
+    style::{Color, Modifier, Style, Stylize},
+    widgets::{Block, Clear, Tabs},
 };
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: Sanup) -> SanupResult<()> {
@@ -55,7 +55,11 @@ fn tabs(f: &mut Frame, app: &mut Sanup, tabs_area: Rect) {
     let tabs = Tabs::new(SanupTabs::into_vec_str())
         .block(Block::bordered().title(app.title))
         .style(Style::default().white())
-        .highlight_style(Style::default().green())
+        .highlight_style(
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        )
         .select(app.tabs.into_idx())
         .divider(" ");
 
@@ -63,19 +67,9 @@ fn tabs(f: &mut Frame, app: &mut Sanup, tabs_area: Rect) {
 }
 
 fn settings_tab(f: &mut Frame, app: &mut Sanup, body_area: Rect) {
-    // let items = Settings::field_names()
-    //     .iter()
-    //     .map(|s| ListItem::new(*s))
-    //     .collect();
-    //
-    // let var_list = List::new(items)
-    //     .block(Block::bordered().title("Variables"))
-    //     .style(Style::default().white())
-    //     .highlight_style(Style::default().green())
-    //     .highlight_symbol("@")
-    //     .repeat_highlight_symbol(true);
-    //
-    // f.render_stateful_widget(var_list, area, state);
+    let list = InputList::new(None, true, app.settings.clone().into());
+
+    f.render_widget(list, body_area);
 }
 
 pub fn centered_rect(parent: Rect, percent_x: u16, height: u16) -> Rect {

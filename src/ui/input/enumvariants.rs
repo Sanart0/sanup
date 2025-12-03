@@ -1,4 +1,4 @@
-use std::{fmt::Debug, sync::OnceLock};
+use std::fmt::Debug;
 
 pub trait EnumVariants: ToString + Send + Sync {
     fn default(&self) -> Box<dyn EnumVariants>;
@@ -26,8 +26,35 @@ impl Debug for Box<dyn EnumVariants> {
     }
 }
 
-pub static DEFAULT_ENUM: OnceLock<Box<dyn EnumVariants>> = OnceLock::new();
+#[derive(Clone)]
+pub enum EmptyEnum {
+    Empty,
+}
 
-pub fn set_default_enum_variant(variant: Box<dyn EnumVariants>) {
-    DEFAULT_ENUM.set(variant).ok();
+impl EnumVariants for EmptyEnum {
+    fn default(&self) -> Box<dyn EnumVariants> {
+        Box::new(EmptyEnum::Empty)
+    }
+
+    fn longest(&self) -> String {
+        String::new()
+    }
+
+    fn variants(&self) -> Vec<String> {
+        Vec::new()
+    }
+
+    fn from_string(&self, _s: String) -> Box<dyn EnumVariants> {
+        Self::default(&self)
+    }
+
+    fn clone_box(&self) -> Box<dyn EnumVariants> {
+        Box::new(self.clone())
+    }
+}
+
+impl ToString for EmptyEnum {
+    fn to_string(&self) -> String {
+        String::new()
+    }
 }

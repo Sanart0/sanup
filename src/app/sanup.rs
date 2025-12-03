@@ -1,27 +1,25 @@
 use crate::{
     app::{focus::SanupFocus, settings::Settings, tabs::SanupTabs, theme::Theme},
     backup::task::BackupTask,
-    ui::input::{enumfield::EnumField, field::Field, inputfield::InputField, inputform::InputForm},
+    ui::input::{
+        enumfield::EnumField, field::Field, inputfield::InputField, inputform::InputForm,
+        inputlist::InputList,
+    },
 };
-use ratatui::{
-    crossterm::event::{KeyCode, KeyEvent},
-    widgets::ListState,
-};
+use ratatui::crossterm::event::{KeyCode, KeyEvent};
 
 pub struct Sanup {
     pub title: &'static str,
     pub focus: SanupFocus,
     pub tabs: SanupTabs,
     pub backups: Vec<BackupTask>,
-    pub input_form: InputForm,
     pub settings: Settings,
-    pub settings_list_state: ListState,
+    pub input_form: InputForm,
+    pub input_list: InputList,
 }
 
 impl Sanup {
     pub fn on_key(&mut self, key: KeyEvent) {
-        // info!("APP EVENT: {:?}", key);
-
         match self.focus {
             SanupFocus::Tabs => {
                 if let KeyCode::Char(c) = key.code {
@@ -44,7 +42,7 @@ impl Sanup {
                                         Field::String(InputField::new("STRING")),
                                         Field::Enum(InputField::new_with_value(
                                             "ENUM",
-                                            EnumField::new(Box::new(Theme::Dark)),
+                                            EnumField::from(Theme::Dark),
                                         )),
                                     ]
                                     .into(),
@@ -83,9 +81,9 @@ impl Default for Sanup {
             focus: SanupFocus::Tabs,
             tabs: SanupTabs::Main,
             backups: Vec::new(),
-            input_form: InputForm::default(),
             settings: Settings::default(),
-            settings_list_state: ListState::default().with_selected(None),
+            input_form: InputForm::default(),
+            input_list: InputList::default(),
         }
     }
 }

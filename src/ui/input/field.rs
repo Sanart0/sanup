@@ -1,6 +1,11 @@
 use crate::ui::input::{
-    boolfield::BoolField, enumfield::EnumField, floatfield::FloatField, inputfield::InputField,
-    integerfield::IntegerField, stringfield::StringField,
+    boolfield::BoolField,
+    enumfield::EnumField,
+    floatfield::FloatField,
+    inputfield::InputField,
+    integerfield::IntegerField,
+    stringfield::StringField,
+    value::{Value, Values},
 };
 use std::{
     ops::{Deref, DerefMut},
@@ -23,6 +28,18 @@ pub struct Fields(Vec<Field>);
 impl Fields {
     pub fn new(values: Vec<Field>) -> Self {
         Self(values)
+    }
+
+    pub fn values(&self) -> Values {
+        self.iter()
+            .map(|field| match field {
+                Field::Bool(f) => Value::Bool(f.title(), f.value()),
+                Field::Integer(f) => Value::Integer(f.title(), f.value()),
+                Field::Float(f) => Value::Float(f.title(), f.value()),
+                Field::String(f) => Value::String(f.title(), f.value()),
+                Field::Enum(f) => Value::Enum(f.title(), f.value()),
+            })
+            .collect()
     }
 }
 
